@@ -18,6 +18,7 @@ def UserExist(username):
     return False
   else:
     return True
+
 class Register(Resource):
   def post(self):
     postedData = request.get_json()
@@ -46,3 +47,72 @@ class Register(Resource):
       }
       return jsonify(retJson)
 
+def verifyPw(username, password):
+  if not UserExist(username):
+    return False
+
+  hashed_pw = users.find({
+    "username":username
+  })[0]["password"]
+
+  if bcrypt.hashpw(password.encode('utf8'), hashed_pw) == hashed_pw:
+    return True
+  else:
+    return False
+
+def generateReturnDictionary(status, msg):
+  retJson = {
+    "status": status,
+    "msg": msg
+  }
+  return retJson
+
+def verifyCredentials(username, password):
+  if not UserExist(username):
+    return generateReturnDictionary(301, "Invalid username"), True
+
+  correct_pw = verifyPw(username, password)
+
+  if not correct_pw:
+    return generateReturnDictionary(302, "Invalid password"), True
+
+  return None, False
+
+class Classify(Resource):
+  def post(self):
+    postedData = request.get_json()
+
+    username = postedData["username"]
+    password = postedData["password"]
+    url = postedData["url"]
+
+    retJson, error = verifyCredentials(username, password)
+    if error:
+      return jsonify(retJson)
+
+    tokens = users.find({
+      "username":username
+    })[0]["tokens"]
+
+    if tokens <=0:
+      return jsonify(generateReturnDictionary(303, "Not Enough Tokens"))
+
+    r = requests.get(url)
+    retJson = {}
+    with open('temp.jpg', 'wb') as f:
+      f.write(r.content)
+      proc = subprocess.Popen('python classify_image.py --model_dir=. --image_file=./temp.jpg', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+      ret = proc.communicate()[0]
+      proc.wait()
+      with open("text.txt") as f:
+        retJson = json.load(f)
+
+    users.update({
+      "username": username
+    }, {
+      "$set":{
+        "tokens": tokens-1
+      }
+    })
+
+    return retJson
