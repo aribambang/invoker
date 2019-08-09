@@ -1,5 +1,5 @@
 # Invoker
-Extraction script written in [Python](https://www.python.org/)
+Image recognition API written in [Python](https://www.python.org/)
 
 > From the first point was begat a line. From this line was begat a world. And that first point was one I made. ~ Invoker
 
@@ -22,4 +22,4 @@ Make sure you have [Python](https://www.python.org/) installed on your machine. 
 * Run the API using docker
     * `$ docker-compose -f [your docker compose .yaml file] up --build` to build and run docker image
 
-* visit [http://localhost:5000](http://localhost:5000) to check
+* visit [http://localhost:5000](http://localhost:5000) with Postman to check
