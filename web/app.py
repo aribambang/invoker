@@ -14,7 +14,7 @@ db = client.invoker
 users = db["users"]
 
 def UserExist(username):
-  if users.find({"username":username}).count()==0:
+  if users.find({"username":username}).count() == 0:
     return False
   else:
     return True
@@ -33,19 +33,19 @@ class Register(Resource):
       }
       return jsonify(retJson)
 
-      hash_pw = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
+    hashed_pw = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
 
-      users.insert({
-        "username": username,
-        "password": hash_pw,
-        "tokens": 4
-      })
+    users.insert({
+      "username": username,
+      "password": hashed_pw,
+      "tokens": 4
+    })
 
-      retJson = {
-        "status": 200,
-        "msg": "You successfully signed up for this API"
-      }
-      return jsonify(retJson)
+    retJson = {
+      "status": 200,
+      "msg": "You successfully signed up for this API"
+    }
+    return jsonify(retJson)
 
 def verifyPw(username, password):
   if not UserExist(username):
@@ -99,22 +99,21 @@ class Classify(Resource):
 
     r = requests.get(url)
     retJson = {}
-    with open('temp.jpg', 'wb') as f:
+    with open("temp.jpg", "wb") as f:
       f.write(r.content)
-      proc = subprocess.Popen('python classify_image.py --model_dir=. --image_file=./temp.jpg', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-      ret = proc.communicate()[0]
+      proc = subprocess.Popen('python classify_image.py --model_dir=. --image_file=temp.jpg', shell=True)
+      proc.communicate()[0]
       proc.wait()
-      with open("text.txt") as f:
-        retJson = json.load(f)
+      with open("text.txt") as g:
+        retJson = json.load(g)
 
-    users.update({
-      "username": username
-    }, {
-      "$set":{
-        "tokens": tokens-1
-      }
-    })
-
+      users.update({
+        "username": username
+      }, {
+        "$set":{
+          "tokens": tokens-1
+        }
+      })
     return retJson
 
 class Refill(Resource):
